@@ -1,46 +1,58 @@
-'use strict';
+'use strict'; 
+const fetch = require('node-fetch');
 
-module.exports.hello = (event, context, callback) => {
-  
-  try {
-//    const { queryStringParameters: { category } } = event;
-    const category = event.queryStringParameters.category;
-  } catch (err) {
-    const category = 'yes';
-  }
+// CONSTANTS
+const GOOGLE_API_KEY = 'AIzaSyDEUoHAKBd1IEbtSclPajMCecbRJNKHQvI';
+const GOOGLE_YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
+const REQUEST_URL_CATEGORIES = `${GOOGLE_YOUTUBE_API_URL}/playlists`;
+const REQUEST_URL_CATEGORY = `${GOOGLE_YOUTUBE_API_URL}/playlistItems`;
+const CHANNEL_ID = 'UCzMhCVtm3sxKoU8279I1sHA';
+// CONSTANTS
 
-  const category = event.queryStringParameters.category;
+function makeCategoriesRequestURL(URL, id) {
+  return `${URL}/?part=snippet&channelId=${id}&key=${GOOGLE_API_KEY}`;
+}
 
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      url: YOUTUBE_CATEGORIES[category],
-      input: event,
-    }),
-  };
+function makeCategoryRequestURL(URL, id) {
+  return `${URL}/?part=snippet&playlistId=${id}&key=${GOOGLE_API_KEY}`;
+}
 
-  callback(null, response);
+function fetchRequest(URL) {
+  return fetch(URL)
+    .then((response) => {
+      return response.json();
+    });
+}
 
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // callback(null, { message: 'Go Serverless v1.0! Your function executed successfully!', event });
-};
+function parseData(data) {
+  return data.items.map( (item) => {
+    return {
+      name: item.snippet.title,
+      id: item.id,
+      url: item.snippet.thumbnails.medium.url,
+    };
+  });
+}
 
 module.exports.categories = (event, context, callback) => {
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: REQUEST_URL_CATEGORIES,
-    }),
-  };
+  const requestCategoriesURL = makeCategoriesRequestURL(REQUEST_URL_CATEGORIES, CHANNEL_ID);
 
-  callback(null, response);
+  fetchRequest(requestCategoriesURL)
+    .then(parseCategoriesData)
+    .then( (data) => {
+      callback(null, {
+        statusCode: 200,
+        body: JSON.stringify({
+          list: data,
+        }).
+      });
 };
 
 module.exports.category = (event, context, callback) => {
   const response = {
     statusCode: 200,
     body: JSON.stringify({
-      message: 'yes',
+      message: 'yes!',
     }),
   };
 
