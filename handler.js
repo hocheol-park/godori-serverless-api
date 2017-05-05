@@ -24,12 +24,22 @@ function fetchRequest(URL) {
     });
 }
 
-function parseData(data) {
+function parseCategoriesData(data) {
   return data.items.map( (item) => {
     return {
       name: item.snippet.title,
       id: item.id,
       url: item.snippet.thumbnails.medium.url,
+    };
+  });
+}
+
+function parseCategoryData(data) {
+  return data.items.map( (item) => {
+    return {
+      name: item.snippet.title,
+      video_id: item.snippet.resourceId.videoId,
+      thumbnail_url: item.snippet.thumbnails.medium.url,
     };
   });
 }
@@ -56,7 +66,7 @@ module.exports.categories = (event, context, callback) => {
   };
   
   fetchRequest(requestCategoriesURL)
-    .then(parseData)
+    .then(parseCategoriesData)
     .then( (data) => {
       callback(null, {
         statusCode: 200,
@@ -69,12 +79,26 @@ module.exports.categories = (event, context, callback) => {
 };
 
 module.exports.category = (event, context, callback) => {
+  const categoryId = event.queryStringParameters.id;
+  const requestCategoryURL = makeCategoryRequestURL(REQUEST_URL_CATEGORY, categoryId);
+  
   const response = {
     statusCode: 200,
     body: JSON.stringify({
-      message: 'yes!',
+      message: requestCategoryURL,
     }),
   };
+  
+  fetchRequest(requestCategoryURL)
+    .then(parseCategoryData)
+    .then( (data) => {
+      callback(null, {
+        statusCode: 200,
+        body: JSON.stringify({
+          list: data,
+        })
+      });
+  });
 
-  callback(null, response);
+  //callback(null, response);
 };
