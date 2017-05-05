@@ -34,18 +34,38 @@ function parseData(data) {
   });
 }
 
+module.exports.hello = (event, context, callback) => {
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: 'yes!',
+    }),
+  };
+
+  callback(null, response);
+};
+
 module.exports.categories = (event, context, callback) => {
   const requestCategoriesURL = makeCategoriesRequestURL(REQUEST_URL_CATEGORIES, CHANNEL_ID);
 
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: requestCategoriesURL,
+    }),
+  };
+  
   fetchRequest(requestCategoriesURL)
-    .then(parseCategoriesData)
+    .then(parseData)
     .then( (data) => {
       callback(null, {
         statusCode: 200,
         body: JSON.stringify({
           list: data,
-        }).
+        })
       });
+  });
+  
 };
 
 module.exports.category = (event, context, callback) => {
